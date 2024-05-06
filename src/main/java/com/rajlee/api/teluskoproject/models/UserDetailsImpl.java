@@ -40,6 +40,10 @@ public class UserDetailsImpl implements UserDetails {
         return true;
     }
 
+    public String getUserEmail(){
+        return user.getEmail();
+    }
+
     @Override
     public boolean isAccountNonLocked() {
         return true;

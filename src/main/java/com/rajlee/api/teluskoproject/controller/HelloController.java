@@ -2,7 +2,7 @@ package com.rajlee.api.teluskoproject.controller;
 
 //import org.springframework.security.core.userdetails.User;
 import com.rajlee.api.teluskoproject.models.User;
-import com.rajlee.api.teluskoproject.service.JwtTokenService;
+import com.rajlee.api.teluskoproject.service.JwtService;
 import com.rajlee.api.teluskoproject.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class HelloController {
     private UserService userService;
 
     @Autowired
-    private JwtTokenService jwtTokenService;
+    private JwtService jwtTokenService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -34,7 +34,7 @@ public class HelloController {
         return (CsrfToken) request.getAttribute("_csrf");
     }
 
-    @GetMapping("/hello")
+    @GetMapping("hello")
     public String Greet(){
         return "Hello user";
     }

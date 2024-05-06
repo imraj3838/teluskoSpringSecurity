@@ -1,10 +1,14 @@
 package com.rajlee.api.teluskoproject.service;
 
+
+import com.rajlee.api.teluskoproject.models.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -19,44 +23,43 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
-public class JwtTokenService {
+public class JwtService {
 
-    private static final String SECRET_KEY = Base64.getEncoder().encodeToString(Keys.secretKeyFor(SignatureAlgorithm.HS256).getEncoded());
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
-    private String secret_key;
+    private String secretKey;
 
-    public JwtTokenService(){
-      secret_key = generateSecretKeyString();
+    public JwtService() {
+        secretKey = generateSecretKey();
     }
-    public String generateSecretKeyString() {
+
+    public String generateSecretKey() {
         try {
-            // Generate a SecretKey
             KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
             SecretKey secretKey = keyGen.generateKey();
+            logger.info("Secret Key: {}", secretKey);
             return Base64.getEncoder().encodeToString(secretKey.getEncoded());
         } catch (NoSuchAlgorithmException e) {
-           throw new RuntimeException("error generating secret key", e);
+            throw new RuntimeException("Error generating secret key", e);
         }
     }
 
-public String generateToken(String username){
-    Map<String,Object> claims = new HashMap<>();
-    return Jwts.builder()
-            .setClaims(claims)
-            .setSubject(username)
-            .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + 5000*60*3))
-            .signWith(getKey(), SignatureAlgorithm.HS256).compact(); // Use HS256 here
-}
-
+    public String generateToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 10000 * 60 * 30))
+                .signWith(getKey(), SignatureAlgorithm.HS256).compact();
+    }
 
     private Key getKey() {
-        byte [] keyBytes = Decoders.BASE64.decode(secret_key);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractUserName(String token) {
-        // extract the username from jwt token
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -68,16 +71,16 @@ public String generateToken(String username){
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .build().parseClaimsJws(token).getBody();
     }
 
-
-
-    public boolean validateToken(String token, UserDetails userDetails) {
+    public boolean validateToken(String token, UserDetailsImpl userDetails) {
         final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
+//        System.out.println(userName+"from validation");
+//        System.out.println(userDetails.getUsername()+"from validation");
+        boolean b = (userName.equals(userDetails.getUserEmail()) );
+        System.out.println(b);
+        return b;
     }
 
     private boolean isTokenExpired(String token) {
