@@ -2,11 +2,13 @@ package com.rajlee.api.teluskoproject.controller;
 
 //import org.springframework.security.core.userdetails.User;
 import com.rajlee.api.teluskoproject.models.User;
+import com.rajlee.api.teluskoproject.service.JwtTokenService;
 import com.rajlee.api.teluskoproject.service.UserService;
-import com.sun.net.httpserver.HttpServer;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,13 +23,19 @@ public class HelloController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtTokenService jwtTokenService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
     @GetMapping("/csrftoken")
     public CsrfToken csrfToken(HttpServletRequest request){
         return (CsrfToken) request.getAttribute("_csrf");
     }
 
     @GetMapping("/hello")
-    public String Greet(HttpServletRequest request){
+    public String Greet(){
         return "Hello user";
     }
 
@@ -39,5 +47,13 @@ public class HelloController {
     @PostMapping("/save")
     public void registerUser(@RequestBody User user){
         userService.registerUser(user);
+    }
+    @PostMapping("/login")
+    public String loginUser(@RequestBody User user){
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(),user.getPassword()));
+        if(authentication.isAuthenticated()){
+            return jwtTokenService.generateToken(user.getEmail());
+        }
+        return "failed";
     }
 }
